@@ -41,6 +41,28 @@ public class LightingHooks {
 		readNeighborLightChecksFromNBT(chunk, nbt);
 	}
 
+	public static void fillSkylightColumn(final Chunk chunk, final int x, final int z)
+	{
+		final ExtendedBlockStorage[] extendedBlockStorage = chunk.getBlockStorageArray();
+
+		final int height = chunk.getHeightValue(x, z);
+
+		for (int j = height >> 4; j < extendedBlockStorage.length; ++j)
+		{
+			final ExtendedBlockStorage blockStorage = extendedBlockStorage[j];
+
+			if (blockStorage == Chunk.NULL_BLOCK_STORAGE)
+				continue;
+
+			final int yMin = Math.max(j << 4, height);
+
+			for (int y = yMin & 15; y < 16; ++y)
+				blockStorage.setSkyLight(x, y, z, EnumSkyBlock.SKY.defaultLightValue);
+		}
+
+		chunk.markDirty();
+	}
+
 	private static void initChunkLighting(final World world, final Chunk chunk) {
 		if (chunk.isLightPopulated() || ((IChunk) chunk).getPendingNeighborLightInits() != 0)
 			return;

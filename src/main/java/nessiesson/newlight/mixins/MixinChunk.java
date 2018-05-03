@@ -9,6 +9,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldProvider;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import org.spongepowered.asm.lib.Opcodes;
@@ -31,6 +32,8 @@ import static net.minecraft.world.chunk.Chunk.NULL_BLOCK_STORAGE;
 public abstract class MixinChunk implements IChunk {
 	private short[] neightborLightChecks = null;
 	private short pendingNeighborLightInits;
+	private int j;
+	private int k;
 	@Shadow
 	@Final
 	private int[] heightMap;
@@ -39,10 +42,11 @@ public abstract class MixinChunk implements IChunk {
 	private World world;
 	@Shadow
 	private int heightMapMinimum;
-
 	@Shadow
 	@Final
 	private ExtendedBlockStorage[] storageArrays;
+	@Shadow
+	private boolean dirty;
 
 	@Shadow
 	public abstract boolean canSeeSky(BlockPos pos);
@@ -53,14 +57,26 @@ public abstract class MixinChunk implements IChunk {
 	@Shadow
 	protected abstract void generateHeightMap();
 
-	@Inject(method = "generateSkylightMap", at = @At(value = "HEAD"), cancellable = true)
-	private void onHasSkyLight(CallbackInfo ci) {
-		ci.cancel();
+	// Since we can't use LocalCapture directly in @Redirected methods we'll simply make a copy of them for ourselves.
+	@Inject(method = "generateSkylightMap", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/WorldProvider;hasSkyLight()Z"), locals = LocalCapture.CAPTURE_FAILHARD)
+	private void setJAndKFields(CallbackInfo ci, int i, int j, int k) {
+		this.j = j;
+		this.k = k;
+	}
+
+	@Redirect(method = "generateSkylightMap", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/WorldProvider;hasSkyLight()Z"))
+	private boolean callFillSkylightColumnInWorldsWithSkylight(WorldProvider worldProvider) {
+		if (this.world.provider.hasSkyLight()) {
+			LightingHooks.fillSkylightColumn((Chunk) (Object) this, this.j, this.k);
+			return false;
+		}
+		return true;
 	}
 
 	// Soft override the method since there isn't really a "clean" way to do it with Mixins.
 	@Inject(method = "relightBlock", at = @At("HEAD"), cancellable = true)
 	private void onRelightBlock(int x, int y, int z, CallbackInfo ci) {
+		ci.cancel();
 		int i = this.heightMap[z << 4 | x];
 		int j = i;
 
