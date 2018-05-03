@@ -45,8 +45,6 @@ public abstract class MixinChunk implements IChunk {
 	@Shadow
 	@Final
 	private ExtendedBlockStorage[] storageArrays;
-	@Shadow
-	private boolean dirty;
 
 	@Shadow
 	public abstract boolean canSeeSky(BlockPos pos);
