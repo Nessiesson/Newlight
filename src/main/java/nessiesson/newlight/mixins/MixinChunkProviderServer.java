@@ -24,8 +24,7 @@ public abstract class MixinChunkProviderServer {
 		((IWorld) this.world).getLightingEngine().procLightUpdates();
 	}
 
-	// TODO: Fix target.
-	@Redirect(method = "tick", at = @At(value = "INVOKE", target = "Ljava/util/Set;isEmpty()Z"), remap = false)
+	@Redirect(method = "tick", at = @At(value = "INVOKE", target = "Ljava/util/Set;isEmpty()Z", remap = false))
 	private boolean foo(Set set) {
 		final boolean isEmpty = set.isEmpty();
 		if (!isEmpty) {

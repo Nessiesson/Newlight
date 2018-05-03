@@ -32,8 +32,8 @@ import static net.minecraft.world.chunk.Chunk.NULL_BLOCK_STORAGE;
 public abstract class MixinChunk implements IChunk {
 	private short[] neightborLightChecks = null;
 	private short pendingNeighborLightInits;
-	private int j;
-	private int k;
+	private int copyOfJ;
+	private int copyOfK;
 	@Shadow
 	@Final
 	private int[] heightMap;
@@ -58,14 +58,14 @@ public abstract class MixinChunk implements IChunk {
 	// Since we can't use LocalCapture directly in @Redirected methods we'll simply make a copy of them for ourselves.
 	@Inject(method = "generateSkylightMap", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/WorldProvider;hasSkyLight()Z"), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void setJAndKFields(CallbackInfo ci, int i, int j, int k) {
-		this.j = j;
-		this.k = k;
+		this.copyOfJ = j;
+		this.copyOfK = k;
 	}
 
 	@Redirect(method = "generateSkylightMap", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/WorldProvider;hasSkyLight()Z"))
 	private boolean callFillSkylightColumnInWorldsWithSkylight(WorldProvider worldProvider) {
 		if (this.world.provider.hasSkyLight()) {
-			LightingHooks.fillSkylightColumn((Chunk) (Object) this, this.j, this.k);
+			LightingHooks.fillSkylightColumn((Chunk) (Object) this, this.copyOfJ, this.copyOfK);
 			return false;
 		}
 		return true;
@@ -100,7 +100,7 @@ public abstract class MixinChunk implements IChunk {
 		}
 	}
 
-	@Inject(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;", ordinal = 1, shift = At.Shift.AFTER, opcode = Opcodes.GETFIELD), locals = LocalCapture.CAPTURE_FAILHARD)
+	@Inject(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;", ordinal = 0, shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void onSetBlockState(BlockPos pos, IBlockState state, CallbackInfoReturnable<IBlockState> cir, int i, int k, int j, int l, int i1, IBlockState iblockstate, Block block, Block block1, ExtendedBlockStorage extendedblockstorage) {
 		LightingHooks.initSkylightForSection(this.world, (Chunk) (Object) this, extendedblockstorage); //Forge: Always initialize sections properly (See #3870 and #3879)
 	}
