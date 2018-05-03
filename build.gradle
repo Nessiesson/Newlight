@@ -1,0 +1,71 @@
+buildscript {
+	repositories {
+		mavenLocal()
+		mavenCentral()
+		maven {
+			name = "sonatype"
+			url = "https://oss.sonatype.org/content/repositories/snapshots/"
+		}
+		maven {
+			name = "forge"
+			url = "http://files.minecraftforge.net/maven"
+		}
+		maven {
+			name = 'sponge'
+			url = 'http://repo.spongepowered.org/maven'
+		}
+	}
+	dependencies {
+		classpath 'net.minecraftforge.gradle:ForgeGradle:' + project.forgeGradleVersion
+		classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
+	}
+}
+
+apply plugin: 'net.minecraftforge.gradle.liteloader'
+apply plugin: 'org.spongepowered.mixin'
+
+version = project.version + '-SNAPSHOT'
+group = project.group // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = project.name
+
+minecraft {
+	// these values are defined in the gradle.properties file, so that this file does not need to be altered
+	version = project.mcVersion
+	mappings = project.mcMappings
+	runDir = "run"
+	replace '@VERSION@', project.version
+}
+
+sourceSets {
+	main {
+		// Refmap declaration must match the refmap name specified in the json config
+		ext.refMap = "mixins.newlight.refmap.json"
+	}
+}
+
+mixin {
+	// liteloader does not do runtime deobfuscation, so in production we use "notch names", mixin needs to know this
+	defaultObfuscationEnv notch
+}
+
+libsDirName = "../libs"
+
+litemod {
+	json {
+		author = "nessie"
+		name = project.name
+		mcversion = project.mcVersion
+		description = "PhiPro95's and Mathe172's light engine changes ported to Liteloader w/mixins."
+		mixinConfigs += "mixins.newlight.json"
+
+	}
+}
+
+jar {
+	// The litemod task above generates the litemod.json dynamically, you can replace it with a resource if you want more control
+	from litemod.outputs
+}
+
+runClient {
+	jvmArgs "-Dmixin.debug=true"
+}

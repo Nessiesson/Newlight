@@ -1,0 +1,17 @@
+{
+	"required": true,
+	"package": "nessiesson.newlight.mixins",
+	"refmap": "mixins.newlight.refmap.json",
+	"mixins": [
+		"IMixinEnumFacing",
+		"MixinAnvilChunkLoader",
+		"MixinChunk",
+		"MixinChunkProviderServer",
+		"MixinExtendedBlockStorage",
+		"MixinMinecraft",
+		"MixinRenderGlobal",
+		"MixinSPacketChunkData",
+		"MixinWorld",
+		"MixinWorldServer"
+	]
+}

@@ -1,0 +1,176 @@
+package nessiesson.newlight.mixins;
+
+import nessiesson.newlight.IChunk;
+import nessiesson.newlight.IWorld;
+import nessiesson.newlight.LightingHooks;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import org.spongepowered.asm.lib.Opcodes;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+
+import java.util.Arrays;
+
+import static net.minecraft.world.chunk.Chunk.NULL_BLOCK_STORAGE;
+
+@Mixin(Chunk.class)
+public abstract class MixinChunk implements IChunk {
+	private short[] neightborLightChecks = null;
+	private short pendingNeighborLightInits;
+	@Shadow
+	@Final
+	private int[] heightMap;
+	@Shadow
+	@Final
+	private World world;
+	@Shadow
+	private int heightMapMinimum;
+
+	@Shadow
+	@Final
+	private ExtendedBlockStorage[] storageArrays;
+
+	@Shadow
+	public abstract boolean canSeeSky(BlockPos pos);
+
+	@Shadow
+	protected abstract int getBlockLightOpacity(int x, int y, int z);
+
+	@Shadow
+	protected abstract void generateHeightMap();
+
+	@Inject(method = "generateSkylightMap", at = @At(value = "HEAD"), cancellable = true)
+	private void onHasSkyLight(CallbackInfo ci) {
+		ci.cancel();
+	}
+
+	// Soft override the method since there isn't really a "clean" way to do it with Mixins.
+	@Inject(method = "relightBlock", at = @At("HEAD"), cancellable = true)
+	private void onRelightBlock(int x, int y, int z, CallbackInfo ci) {
+		int i = this.heightMap[z << 4 | x];
+		int j = i;
+
+		if (y > i) {
+			j = y;
+		}
+
+		while (j > 0 && this.getBlockLightOpacity(x, j - 1, z) == 0) {
+			--j;
+		}
+
+		if (j != i) {
+			this.heightMap[z << 4 | x] = j;
+
+			if (this.world.provider.hasSkyLight()) {
+				LightingHooks.relightSkylightColumn(this.world, (Chunk) (Object) this, x, z, i, j); // Forge: Optimized version of World.markBlocksDirtyVertical; heightMap is now updated (See #3871)
+			}
+
+			int l1 = this.heightMap[z << 4 | x];
+			if (l1 < this.heightMapMinimum) {
+				this.heightMapMinimum = l1;
+			}
+		}
+	}
+
+	@Inject(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;", ordinal = 1, shift = At.Shift.AFTER, opcode = Opcodes.GETFIELD), locals = LocalCapture.CAPTURE_FAILHARD)
+	private void onSetBlockState(BlockPos pos, IBlockState state, CallbackInfoReturnable<IBlockState> cir, int i, int k, int j, int l, int i1, IBlockState iblockstate, Block block, Block block1, ExtendedBlockStorage extendedblockstorage) {
+		LightingHooks.initSkylightForSection(this.world, (Chunk) (Object) this, extendedblockstorage); //Forge: Always initialize sections properly (See #3870 and #3879)
+	}
+
+	@ModifyVariable(method = "setBlockState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;set(IIILnet/minecraft/block/state/IBlockState;)V", ordinal = 0))
+	private boolean setFlagToFalse(boolean flag) {
+		return false;
+	}
+
+	@Redirect(method = "setBlockState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;propagateSkylightOcclusion(II)V"))
+	private void cancelPropagateSkylightOcclusion(Chunk chunk, int x, int z) {
+	}
+
+	@Inject(method = "getLightFor", at = @At("HEAD"), cancellable = true)
+	private void onGetLightFor(EnumSkyBlock type, BlockPos pos, CallbackInfoReturnable<Integer> cir) {
+		((IWorld) this.world).getLightingEngine().procLightUpdates(type);
+		cir.setReturnValue(this.getCachedLightFor(type, pos));
+	}
+
+	public int getCachedLightFor(EnumSkyBlock type, BlockPos pos) {
+		int i = pos.getX() & 15;
+		int j = pos.getY();
+		int k = pos.getZ() & 15;
+		ExtendedBlockStorage extendedblockstorage = this.storageArrays[j >> 4];
+
+		if (extendedblockstorage == NULL_BLOCK_STORAGE) {
+			return this.canSeeSky(pos) ? type.defaultLightValue : 0;
+		} else if (type == EnumSkyBlock.SKY) {
+			return !this.world.provider.hasSkyLight() ? 0 : extendedblockstorage.getSkyLight(i, j & 15, k);
+		} else {
+			return type == EnumSkyBlock.BLOCK ? extendedblockstorage.getBlockLight(i, j & 15, k) : type.defaultLightValue;
+		}
+	}
+
+	// TODO: Give better name.
+	@Redirect(method = "setLightFor", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;generateSkylightMap()V"))
+	private void weCallThisElsewhere(Chunk chunk) {
+	}
+
+	// TODO: Give better name.
+	@Inject(method = "setLightFor", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;generateSkylightMap()V"), locals = LocalCapture.CAPTURE_FAILHARD)
+	private void insteadOfGenerateSkylightMap(EnumSkyBlock type, BlockPos pos, int value, CallbackInfo ci, int i, int j, int k, ExtendedBlockStorage extendedblockstorage) {
+		LightingHooks.initSkylightForSection(this.world, (Chunk) (Object) this, extendedblockstorage); //Forge: generateSkylightMap produces the wrong result (See #3870)
+	}
+
+	@Inject(method = "getLightSubtracted", at = @At("HEAD"))
+	private void onGetLightSubtracted(BlockPos pos, int amount, CallbackInfoReturnable<Integer> cir) {
+		((IWorld) this.world).getLightingEngine().procLightUpdates();
+	}
+
+	@Inject(method = "onLoad", at = @At("RETURN"))
+	private void postOnLoad(CallbackInfo ci) {
+		LightingHooks.onLoad(this.world, (Chunk) (Object) this);
+	}
+
+	@Redirect(method = "onTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;checkLight()V"))
+	private void onCheckLight(Chunk chunk) {
+	}
+
+	// TODO: Give better name.
+	@Redirect(method = "read", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;generateHeightMap()V"))
+	private void weAlsoCallThisElsewhere(Chunk chunk) {
+	}
+
+	@Inject(method = "read", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;generateHeightMap()V", shift = At.Shift.AFTER))
+	private void preGenerateHeightMap(PacketBuffer buf, int availableSections, boolean groundUpContinuous, CallbackInfo ci) {
+		final int[] oldHeightMap = groundUpContinuous ? null : Arrays.copyOf(heightMap, heightMap.length);
+		this.generateHeightMap();
+		LightingHooks.relightSkylightColumns(world, (Chunk) (Object) this, oldHeightMap);
+	}
+
+	public short[] getNeighborLightChecks() {
+		return this.neightborLightChecks;
+	}
+
+	public void setNeighborLightChecks(short[] in) {
+		this.neightborLightChecks = in;
+	}
+
+	public short getPendingNeighborLightInits() {
+		return this.pendingNeighborLightInits;
+	}
+
+	public void setPendingNeighborLightInits(short in) {
+		this.pendingNeighborLightInits = in;
+	}
+}

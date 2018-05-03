@@ -1,0 +1,18 @@
+package nessiesson.newlight.mixins;
+
+import nessiesson.newlight.IWorld;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.play.server.SPacketChunkData;
+import net.minecraft.world.chunk.Chunk;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+@Mixin(SPacketChunkData.class)
+public abstract class MixinSPacketChunkData {
+	@Inject(method = "extractChunkData", at = @At("HEAD"))
+	private void onInit(PacketBuffer buf, Chunk chunkIn, boolean writeSkylight, int changedSectionFilter, CallbackInfoReturnable<Integer> cir) {
+		((IWorld) chunkIn.getWorld()).getLightingEngine().procLightUpdates();
+	}
+}
