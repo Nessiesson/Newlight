@@ -100,7 +100,7 @@ public abstract class MixinChunk implements IChunk {
 		}
 	}
 
-	@Inject(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;", ordinal = 0, shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD), locals = LocalCapture.CAPTURE_FAILHARD)
+	@Inject(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;", ordinal = 1, shift = At.Shift.AFTER, opcode = Opcodes.GETFIELD), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void onSetBlockState(BlockPos pos, IBlockState state, CallbackInfoReturnable<IBlockState> cir, int i, int k, int j, int l, int i1, IBlockState iblockstate, Block block, Block block1, ExtendedBlockStorage extendedblockstorage) {
 		LightingHooks.initSkylightForSection(this.world, (Chunk) (Object) this, extendedblockstorage); //Forge: Always initialize sections properly (See #3870 and #3879)
 	}
