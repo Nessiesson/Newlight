@@ -1,1 +1,11 @@
-{}
+{
+  "name": "Newlight",
+  "version": "0.0.1-SNAPSHOT",
+  "author": "nessie",
+  "mcversion": "1.12.2",
+  "revision": "1",
+  "mixinConfigs": [
+    "mixins.newlight.json"
+  ],
+  "description": "PhiPro95\u0027s and Mathe172\u0027s light engine changes ported to Liteloader w/mixins."
+}

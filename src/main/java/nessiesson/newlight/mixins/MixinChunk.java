@@ -45,6 +45,8 @@ public abstract class MixinChunk implements IChunk {
 	@Shadow
 	@Final
 	private ExtendedBlockStorage[] storageArrays;
+	@Shadow
+	private boolean isTerrainPopulated;
 
 	@Shadow
 	public abstract boolean canSeeSky(BlockPos pos);
@@ -100,7 +102,7 @@ public abstract class MixinChunk implements IChunk {
 		}
 	}
 
-	@Inject(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;", ordinal = 1, shift = At.Shift.AFTER, args = "array=get"), locals = LocalCapture.CAPTURE_FAILHARD)
+	@Inject(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;", ordinal = 1), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void onSetBlockState(BlockPos pos, IBlockState state, CallbackInfoReturnable<IBlockState> cir, int i, int k, int j, int l, int i1, IBlockState iblockstate, Block block, Block block1, ExtendedBlockStorage extendedblockstorage) {
 		LightingHooks.initSkylightForSection(this.world, (Chunk) (Object) this, extendedblockstorage); //Forge: Always initialize sections properly (See #3870 and #3879)
 	}
@@ -114,6 +116,11 @@ public abstract class MixinChunk implements IChunk {
 	private void cancelPropagateSkylightOcclusion(Chunk chunk, int x, int z) {
 	}
 
+	@Redirect(method = "setBlockState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getLightFor(Lnet/minecraft/world/EnumSkyBlock;Lnet/minecraft/util/math/BlockPos;)I"))
+	public int cancelGetLightFor(Chunk chunk, EnumSkyBlock type, BlockPos pos) {
+		return 0;
+	}
+	
 	@Inject(method = "getLightFor", at = @At("HEAD"), cancellable = true)
 	private void onGetLightFor(EnumSkyBlock type, BlockPos pos, CallbackInfoReturnable<Integer> cir) {
 		((IWorld) this.world).getLightingEngine().procLightUpdates(type);
@@ -156,6 +163,12 @@ public abstract class MixinChunk implements IChunk {
 		LightingHooks.onLoad(this.world, (Chunk) (Object) this);
 	}
 
+	@Redirect(method = "populate(Lnet/minecraft/world/gen/IChunkGenerator;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;checkLight()V"))
+	protected void noPopulateCheckLight(Chunk chunk)
+	{
+		this.isTerrainPopulated = true;
+	}
+	
 	@Redirect(method = "onTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;checkLight()V"))
 	private void onCheckLight(Chunk chunk) {
 	}

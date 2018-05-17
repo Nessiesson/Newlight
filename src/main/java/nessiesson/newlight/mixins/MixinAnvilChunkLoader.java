@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(AnvilChunkLoader.class)
 public abstract class MixinAnvilChunkLoader {
-	@Inject(method = "writeChunkToNBT", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/NBTTagCompound;setTag(Ljava/lang/String;Lnet/minecraft/nbt/NBTBase;)V", ordinal = 0))
+	@Inject(method = "writeChunkToNBT", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/NBTTagCompound;setTag(Ljava/lang/String;Lnet/minecraft/nbt/NBTBase;)V", ordinal = 0, shift = At.Shift.AFTER))
 	private void postSetTagSections(Chunk chunkIn, World worldIn, NBTTagCompound compound, CallbackInfo ci) {
 		LightingHooks.writeLightData(chunkIn, compound);
 	}
