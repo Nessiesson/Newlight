@@ -11,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(SPacketChunkData.class)
 public abstract class MixinSPacketChunkData {
-	@Inject(method = "extractChunkData", at = @At("HEAD"))
-	private void onInit(PacketBuffer buf, Chunk chunkIn, boolean writeSkylight, int changedSectionFilter, CallbackInfoReturnable<Integer> cir) {
+	@Inject(method = "calculateChunkSize", at = @At("HEAD"))
+	private void onInit(Chunk chunkIn, boolean flag, int changedSectionFilter, CallbackInfoReturnable<Integer> cir) {
 		((IWorld) chunkIn.getWorld()).getLightingEngine().procLightUpdates();
 	}
 }
