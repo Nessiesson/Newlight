@@ -13,7 +13,7 @@ public class LiteModNewLight implements Tickable {
 
 	@Override
 	public String getVersion() {
-		return null;
+		return "@VERSION@";
 	}
 
 	@Override
@@ -26,6 +26,6 @@ public class LiteModNewLight implements Tickable {
 
 	@Override
 	public String getName() {
-		return null;
+		return "@NAME@";
 	}
 }
