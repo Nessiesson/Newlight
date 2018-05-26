@@ -14,10 +14,14 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 
 public class LightingHooks {
+	private static final Logger LOGGER = LogManager.getLogger();
+
 	private static final int FLAG_COUNT = 32; //2 light types * 4 directions * 2 halves * (inwards + outwards)
 	private static final int CHUNK_COORD_OVERFLOW_MASK = -1 << 4;
 	private static final String neighborLightInitsKey = "PendingNeighborLightInits";
@@ -466,7 +470,7 @@ public class LightingHooks {
 					((IChunk) chunk).getNeighborLightChecks()[i] = ((NBTTagShort) list.get(i)).getShort();
 				}
 			} else {
-				//FMLLog.warning("Chunk field %s had invalid length, ignoring it (chunk coordinates: %s %s)", neighborLightChecksKey, chunk.x, chunk.z);
+				LOGGER.warn("Chunk field {} had invalid length, ignoring it (chunk coordinates: {} {})", neighborLightChecksKey, chunk.x, chunk.z);
 			}
 		}
 	}
