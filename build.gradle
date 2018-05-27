@@ -18,6 +18,7 @@ buildscript {
 	dependencies {
 		classpath 'net.minecraftforge.gradle:ForgeGradle:' + project.forgeGradleVersion
 		classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
+		classpath 'org.jetbrains.java.decompiler:fernflower:sponge-SNAPSHOT'
 	}
 }
 
@@ -44,6 +45,11 @@ sourceSets {
 	}
 }
 
+dependencies {
+	// Fernflower decompiler
+	compile 'org.jetbrains.java.decompiler:fernflower:sponge-SNAPSHOT'
+}
+
 mixin {
 	// liteloader does not do runtime deobfuscation, so in production we use "notch names", mixin needs to know this
 	defaultObfuscationEnv notch
@@ -68,5 +74,5 @@ jar {
 }
 
 runClient {
-	jvmArgs "-Dmixin.debug=true"
+	jvmArgs "-Dmixin.debug=true", "-Dmixin.hotSwap=true"
 }
