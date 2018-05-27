@@ -1,9 +1,8 @@
 {
   "name": "Newlight",
-  "version": "0.0.1-SNAPSHOT",
+  "version": "1.0.0",
   "author": "nessie",
-  "mcversion": "1.12.2",
-  "revision": "1",
+  "mcversion": "1.12",
   "mixinConfigs": [
     "mixins.newlight.json"
   ],
