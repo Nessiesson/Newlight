@@ -68,9 +68,8 @@ public abstract class MixinChunk implements IChunk {
 	private boolean callFillSkylightColumnInWorldsWithSkylight(WorldProvider worldProvider) {
 		if (this.world.provider.hasSkyLight()) {
 			LightingHooks.fillSkylightColumn((Chunk) (Object) this, this.copyOfJ, this.copyOfK);
-			return false;
 		}
-		return true;
+		return false;
 	}
 
 	// Soft override the method since there isn't really a "clean" way to do it with Mixins.
