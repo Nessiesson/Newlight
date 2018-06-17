@@ -67,7 +67,10 @@ public class LightInitHooks
                     for (int y = 0; y < 16; ++y)
                     {
                         if (blockStorage.get(x, y, z).getLightValue() > 0)
+                        {
+                            pos.setPos(xBase + x, (j << 4) + y, zBase + z);
                             world.checkLightFor(EnumSkyBlock.BLOCK, pos);
+                        }
                     }
                 }
             }
