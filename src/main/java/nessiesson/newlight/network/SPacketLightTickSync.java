@@ -7,16 +7,19 @@ import net.minecraft.network.PacketBuffer;
 
 public class SPacketLightTickSync implements ICustomPayload
 {
-    private final PacketBuffer buf = new PacketBuffer(Unpooled.buffer());
     public static final SPacketLightTickSync INSTANCE = new SPacketLightTickSync();
     
     public SPacketLightTickSync()
     {
-        this.buf.writeByte(1);
+        
     }
 
-    public PacketBuffer toPacketBuffer() {
-        return this.buf;
+    public PacketBuffer toPacketBuffer()
+    {
+        final PacketBuffer buf = new PacketBuffer(Unpooled.buffer());
+        buf.writeByte(1);
+        
+        return buf;
     }
 
     public void fromPacketBuffer(final PacketBuffer buf)

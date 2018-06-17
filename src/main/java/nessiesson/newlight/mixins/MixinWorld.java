@@ -35,7 +35,7 @@ public abstract class MixinWorld implements IWorld {
 		cir.setReturnValue(true);
 	}
 
-	public LightingEngine getLightingEngine() {
+	public final LightingEngine getLightingEngine() {
 		return this.lightingEngine;
 	}
 }

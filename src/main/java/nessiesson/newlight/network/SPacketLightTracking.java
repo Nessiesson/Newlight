@@ -14,7 +14,7 @@ public class SPacketLightTracking implements ICustomPayload
 
     public SPacketLightTracking(final PacketBuffer buf)
     {
-        fromPacketBuffer(buf);
+        this.fromPacketBuffer(buf);
     }
 
     public SPacketLightTracking(final int chunkX, final int chunkZ, final long[] data)

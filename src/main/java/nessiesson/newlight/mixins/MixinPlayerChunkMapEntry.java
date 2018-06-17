@@ -1,6 +1,5 @@
 package nessiesson.newlight.mixins;
 
-import com.google.common.collect.Lists;
 import nessiesson.newlight.IPlayerChunkMapEntry;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.Packet;
@@ -11,6 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -30,6 +30,12 @@ public abstract class MixinPlayerChunkMapEntry implements IPlayerChunkMapEntry {
     
     @Shadow
     private int changedSectionFilter;
+    
+    @Shadow
+    private boolean sentToPlayers;
+    
+    @Shadow
+    public abstract void sendToPlayer(EntityPlayerMP player);
 
     private final java.util.Map<EntityPlayerMP, long[]> lightTrackingData = new java.util.HashMap<>();
     private long[] lightTrackingTick = new long[3];
@@ -37,16 +43,30 @@ public abstract class MixinPlayerChunkMapEntry implements IPlayerChunkMapEntry {
     private boolean lightTrackingEmpty = true;
     private int lightTrackingSectionMask;
 
-    @Inject(method = "addPlayer", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", shift = At.Shift.AFTER))
-    private void callAddPlayer(EntityPlayerMP player, CallbackInfo ci)
+    @Redirect(method = "addPlayer", at = @At(value = "FIELD", target = "Lnet/minecraft/server/management/PlayerChunkMapEntry;sentToPlayers:Z"))
+    private boolean callAddPlayer(PlayerChunkMapEntry parent, EntityPlayerMP player)
     {
+        if (this.sentToPlayers)
+        {
+            this.sendToPlayer(player);
+        }
+        
         nessiesson.newlight.LightTrackingHooks.addPlayer(player, (PlayerChunkMapEntry)(Object)this, this.playerChunkMap);
+        
+        return false;
     }
     
-    @Inject(method = "removePlayer", at = @At(value = "INVOKE", target = "Ljava/util/List;remove(Ljava/lang/Object;)Z", shift = At.Shift.AFTER))
-    private void callRemovePlayer(EntityPlayerMP player, CallbackInfo ci)
+    @Redirect(method = "removePlayer", at = @At(value = "INVOKE", target = "Ljava/util/List;isEmpty()Z"))
+    private boolean callRemovePlayer(List<EntityPlayerMP> mixin_players, EntityPlayerMP player)
     {
+        if (mixin_players.isEmpty())
+        {
+            this.playerChunkMap.removeEntry((PlayerChunkMapEntry)(Object)this);
+        }
+        
         nessiesson.newlight.LightTrackingHooks.removePlayer(player, (PlayerChunkMapEntry)(Object)this, this.playerChunkMap);
+        
+        return false;
     }
     
     @Inject(method = "sendToPlayers", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetHandlerPlayServer;sendPacket(Lnet/minecraft/network/Packet;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
