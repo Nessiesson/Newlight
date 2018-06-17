@@ -4,9 +4,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 
 public interface IChunk {
-	short[] getNeighborLightChecks();
+	int[] getNeighborLightChecks();
 
-	void setNeighborLightChecks(short[] in);
+	void setNeighborLightChecks(int[] in);
 
 	short getPendingNeighborLightInits();
 

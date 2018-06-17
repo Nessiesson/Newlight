@@ -1,7 +1,5 @@
 package nessiesson.newlight;
 
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumFacing.Axis;
 import net.minecraft.util.EnumFacing.AxisDirection;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -11,26 +9,6 @@ public class LightUtils
 {
     public static final EnumSkyBlock[] ENUM_SKY_BLOCK_VALUES = EnumSkyBlock.values();
     public static final AxisDirection[] ENUM_AXIS_DIRECTION_VALUES = AxisDirection.values();
-
-    public static AxisDirection getAxisDirection(final EnumFacing dir, final int x, final int z)
-    {
-        return ((dir.getAxis() == Axis.X ? z : x) & 15) < 8 ? AxisDirection.NEGATIVE : AxisDirection.POSITIVE;
-    }
-
-    public static EnumFacing getDirFromAxis(final Axis axis, final AxisDirection axisDir)
-    {
-        switch (axis)
-        {
-        case X:
-            return axisDir == AxisDirection.POSITIVE ? EnumFacing.EAST : EnumFacing.WEST;
-        case Z:
-            return axisDir == AxisDirection.POSITIVE ? EnumFacing.SOUTH : EnumFacing.NORTH;
-        case Y:
-            return axisDir == AxisDirection.POSITIVE ? EnumFacing.UP : EnumFacing.DOWN;
-        }
-
-        return null;
-    }
 
     public static int getIndex(final EnumSkyBlock lightType)
     {
@@ -53,16 +31,6 @@ public class LightUtils
         for (int y = yMin; y <= yMax; ++y)
         {
             world.checkLightFor(lightType, pos.setPos(x, y, z));
-        }
-    }
-
-    public enum EnumBoundaryFacing
-    {
-        IN, OUT;
-
-        public EnumBoundaryFacing getOpposite()
-        {
-            return this == IN ? OUT : IN;
         }
     }
 }

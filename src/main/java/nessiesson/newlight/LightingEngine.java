@@ -307,7 +307,7 @@ public class LightingEngine
 
                         if (nChunk == null)
                         {
-                            LightBoundaryCheckHooks.flagSecBoundaryForUpdate(this.curChunk, this.curPos, this.lightType, dir, LightUtils.EnumBoundaryFacing.OUT);
+                            LightBoundaryCheckHooks.flagOuterSecBoundaryForUpdate((IChunk)this.curChunk, this.curPos, dir, this.lightType);
                             continue;
                         }
 
@@ -429,7 +429,7 @@ public class LightingEngine
         {
             if (this.neighborsChunk[i] == null)
             {
-                LightBoundaryCheckHooks.flagSecBoundaryForUpdate(this.curChunk, this.curPos, this.lightType, IMixinEnumFacing.getValues()[i], LightUtils.EnumBoundaryFacing.IN);
+                LightBoundaryCheckHooks.flagInnerSecBoundaryForUpdate((IChunk)this.curChunk, this.curPos, this.lightType);
                 continue;
             }
 
@@ -455,7 +455,7 @@ public class LightingEngine
 
             if (nChunk == null)
             {
-                LightBoundaryCheckHooks.flagSecBoundaryForUpdate(this.curChunk, this.curPos, this.lightType, dir, LightUtils.EnumBoundaryFacing.OUT);
+                LightBoundaryCheckHooks.flagOuterSecBoundaryForUpdate((IChunk)this.curChunk, this.curPos, dir, this.lightType);
                 continue;
             }
 

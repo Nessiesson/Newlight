@@ -38,19 +38,19 @@ public class LightingHooks
     {
         LightInitHooks.initChunkLighting(world, chunk);
         LightInitHooks.initNeighborLight(world, chunk);
-        LightBoundaryCheckHooks.scheduleRelightChecksForChunkBoundaries(world, chunk);
+        LightBoundaryCheckHooks.scheduleRelightChecksForChunkBoundaries(world, (IChunk)chunk);
     }
 
     public static void writeLightData(final Chunk chunk, final NBTTagCompound nbt)
     {
         LightInitHooks.writeNeighborInitsToNBT(chunk, nbt);
-        LightBoundaryCheckHooks.writeNeighborLightChecksToNBT(chunk, nbt);
+        LightBoundaryCheckHooks.writeNeighborLightChecksToNBT((IChunk)chunk, nbt);
     }
 
     public static void readLightData(final Chunk chunk, final NBTTagCompound nbt)
     {
         LightInitHooks.readNeighborInitsFromNBT(chunk, nbt);
-        LightBoundaryCheckHooks.readNeighborLightChecksFromNBT(chunk, nbt);
+        LightBoundaryCheckHooks.readNeighborLightChecksFromNBT((IChunk)chunk, nbt);
     }
 
     public static void initSkylightForSection(final World world, final Chunk chunk, final ExtendedBlockStorage section)
@@ -149,7 +149,7 @@ public class LightingHooks
                 }
                 else
                 {
-                    LightBoundaryCheckHooks.flagChunkBoundaryForUpdate(chunk, emptySections, EnumSkyBlock.SKY, dir, LightUtils.getAxisDirection(dir, x, z), LightUtils.EnumBoundaryFacing.OUT);
+                    LightBoundaryCheckHooks.flagOuterChunkBoundaryForUpdate((IChunk)chunk, x, z, dir, emptySections, EnumSkyBlock.SKY);
                 }
             }
         }

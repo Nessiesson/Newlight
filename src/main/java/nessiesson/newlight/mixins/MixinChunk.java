@@ -51,7 +51,7 @@ public abstract class MixinChunk implements IChunk {
 	@Shadow
 	protected abstract void generateHeightMap();
 
-	private short[] neightborLightChecks = null;
+	private int[] neightborLightChecks = null;
 	private short pendingNeighborLightInits;
 	private int copyOfJ;
 	private int copyOfK;
@@ -186,11 +186,11 @@ public abstract class MixinChunk implements IChunk {
 		LightingHooks.relightSkylightColumns(world, (Chunk) (Object) this, oldHeightMap);
 	}
 
-	public short[] getNeighborLightChecks() {
+	public int[] getNeighborLightChecks() {
 		return this.neightborLightChecks;
 	}
 
-	public void setNeighborLightChecks(short[] in) {
+	public void setNeighborLightChecks(int[] in) {
 		this.neightborLightChecks = in;
 	}
 
