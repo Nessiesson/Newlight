@@ -2,9 +2,8 @@ package nessiesson.newlight.mixins;
 
 import nessiesson.newlight.IChunk;
 import nessiesson.newlight.IWorld;
+import nessiesson.newlight.LightInitHooks;
 import nessiesson.newlight.LightingHooks;
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -12,7 +11,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
-import org.spongepowered.asm.lib.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,10 +28,6 @@ import static net.minecraft.world.chunk.Chunk.NULL_BLOCK_STORAGE;
 
 @Mixin(Chunk.class)
 public abstract class MixinChunk implements IChunk {
-	private short[] neightborLightChecks = null;
-	private short pendingNeighborLightInits;
-	private int copyOfJ;
-	private int copyOfK;
 	@Shadow
 	@Final
 	private int[] heightMap;
@@ -57,6 +51,11 @@ public abstract class MixinChunk implements IChunk {
 	@Shadow
 	protected abstract void generateHeightMap();
 
+	private int[] neightborLightChecks = null;
+	private short pendingNeighborLightInits;
+	private int copyOfJ;
+	private int copyOfK;
+	
 	// Since we can't use LocalCapture directly in @Redirected methods we'll simply make a copy of them for ourselves.
 	@Inject(method = "generateSkylightMap", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/WorldProvider;hasSkyLight()Z"), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void setJAndKFields(CallbackInfo ci, int i, int j, int k) {
@@ -67,7 +66,7 @@ public abstract class MixinChunk implements IChunk {
 	@Redirect(method = "generateSkylightMap", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/WorldProvider;hasSkyLight()Z"))
 	private boolean callFillSkylightColumnInWorldsWithSkylight(WorldProvider worldProvider) {
 		if (this.world.provider.hasSkyLight()) {
-			LightingHooks.fillSkylightColumn((Chunk) (Object) this, this.copyOfJ, this.copyOfK);
+			LightInitHooks.fillSkylightColumn((Chunk) (Object) this, this.copyOfJ, this.copyOfK);
 		}
 		return false;
 	}
@@ -187,11 +186,11 @@ public abstract class MixinChunk implements IChunk {
 		LightingHooks.relightSkylightColumns(world, (Chunk) (Object) this, oldHeightMap);
 	}
 
-	public short[] getNeighborLightChecks() {
+	public int[] getNeighborLightChecks() {
 		return this.neightborLightChecks;
 	}
 
-	public void setNeighborLightChecks(short[] in) {
+	public void setNeighborLightChecks(int[] in) {
 		this.neightborLightChecks = in;
 	}
 
